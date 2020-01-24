@@ -103,12 +103,6 @@ public class MyRunner implements CommandLineRunner {
                 break;
             }
         }
-
-        try {
-            Double.parseDouble(splitedLine[4]);
-        } catch (Exception e) {
-            throw new BatchException(splitedLine[4] + " n'est pas un nombre valide pour un salaire");
-        }
     }
 
     /**
@@ -123,13 +117,11 @@ public class MyRunner implements CommandLineRunner {
 
         if (splitedLine.length != NB_CHAMPS_COMMERCIAL) {
             throw new BatchException("La ligne technicien ne contient pas " + NB_CHAMPS_COMMERCIAL + " éléments mais " + splitedLine.length);
+        }else {
+            controleSalaire(splitedLine[4]);
         }
 
-        try {
-            c.setDateEmbauche(DateTimeFormat.forPattern("dd/MM/yyyy").parseLocalDate(splitedLine[3])); 
-         } catch (Exception e) {
-             throw new BatchException(splitedLine[3] + " ne respecte pas le format de date dd/MM/yyyy");
-         }
+        trySetDate(c, splitedLine[3]);
 
         try {
             Double.parseDouble(splitedLine[5]);
@@ -143,14 +135,7 @@ public class MyRunner implements CommandLineRunner {
             throw new BatchException("La performance du commercial est incorrecte : " + splitedLine[6]);
         }
 
-        c.setCaAnnuel(Double.parseDouble(splitedLine[5]));
-        c.setMatricule(splitedLine[0]);
-        c.setNom(splitedLine[1]);
-        c.setPerformance(Integer.parseInt(splitedLine[6]));
-        c.setPrenom(splitedLine[2]);
-        c.setSalaire(Double.parseDouble(splitedLine[4]));
-
-        //employeRepository.save(c);
+        hydrate(c, splitedLine);
     }
 
     /**
@@ -167,20 +152,13 @@ public class MyRunner implements CommandLineRunner {
         
         if (splitedLine.length != NB_CHAMPS_MANAGER) {
             throw new BatchException("La ligne manager ne contient pas " + NB_CHAMPS_MANAGER + " éléments mais " + splitedLine.length);
+        }else {
+            controleSalaire(splitedLine[4]);
         }
 
-        try {
-            m.setDateEmbauche(DateTimeFormat.forPattern("dd/MM/yyyy").parseLocalDate(splitedLine[3])); 
-         } catch (Exception e) {
-             throw new BatchException(splitedLine[3] + " ne respecte pas le format de date dd/MM/yyyy");
-         }
+        trySetDate(m, splitedLine[3]);
 
-         m.setMatricule(splitedLine[0]);
-         m.setNom(splitedLine[1]);
-         m.setPrenom(splitedLine[2]);
-         m.setSalaire(Double.parseDouble(splitedLine[4]));
-
-        // employeRepository.save(m);
+         hydrate(m, splitedLine);
     }
 
     /**
@@ -196,6 +174,8 @@ public class MyRunner implements CommandLineRunner {
 
         if (splitedLine.length != NB_CHAMPS_TECHNICIEN) {
             throw new BatchException("La ligne technicien ne contient pas " + NB_CHAMPS_TECHNICIEN + " éléments mais " + splitedLine.length);
+        }else {
+            controleSalaire(splitedLine[4]);
         }
 
         if (!splitedLine[6].matches(REGEX_MATRICULE_MANAGER)) {
@@ -218,11 +198,7 @@ public class MyRunner implements CommandLineRunner {
             t.setManager(manager);
         };
 
-        try {
-            t.setDateEmbauche(DateTimeFormat.forPattern("dd/MM/yyyy").parseLocalDate(splitedLine[3])); 
-         } catch (Exception e) {
-             throw new BatchException(splitedLine[3] + " ne respecte pas le format de date dd/MM/yyyy");
-         }
+        trySetDate(t, splitedLine[3]);
 
         try {
             t.setGrade(Integer.parseInt(splitedLine[5]));
@@ -232,13 +208,48 @@ public class MyRunner implements CommandLineRunner {
             throw new BatchException("Le grade du technicien est incorrect : " + splitedLine[5]);
         }
 
+        hydrate(t, splitedLine);
+    }
+    /**
+     * Methode qui hydrate les parametres commun au employe
+     * @param e l employe a hydrater
+     * @param splitedLine la ligne de l employé concerné 
+     */
+    private void hydrate(Employe e, String[] splitedLine) {
 
-        t.setMatricule(splitedLine[0]);
-        t.setNom(splitedLine[1]);
-        t.setPrenom(splitedLine[2]);
-        t.setSalaire(Double.parseDouble(splitedLine[4]));
+        e.setMatricule(splitedLine[0]);
+        e.setNom(splitedLine[1]);
+        e.setPrenom(splitedLine[2]);
+        e.setSalaire(Double.parseDouble(splitedLine[4]));
 
         //employeRepository.save(t);
+    }
+
+    /**
+     * Methode qui essay de setter la date a l employé et renvois un erreur si ca ne marche pas
+     * @param empl l employe avec date a setter 
+     * @param splitedLine la date
+     * @throws BatchException si le format de date n est pas bon
+     */
+    private void trySetDate(Employe empl, String date) throws BatchException {
+        try {
+            empl.setDateEmbauche(DateTimeFormat.forPattern("dd/MM/yyyy").parseLocalDate(date)); 
+         } catch (Exception e) {
+             throw new BatchException(date + " ne respecte pas le format de date dd/MM/yyyy");
+         }
+    }
+
+    /**
+     * Controle de validité du salaire
+     * @param salaire le salaire 
+     * @throws BatchException si le format du salaire n est pas bon
+     */
+    private void controleSalaire(String salaire) throws BatchException {
+        try {
+            Double.parseDouble(salaire);
+        } catch (Exception e) {
+            throw new BatchException(salaire + " n'est pas un nombre valide pour un salaire");
+        }
     }
 
 }
